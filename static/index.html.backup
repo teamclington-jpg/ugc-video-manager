@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGC Video Manager - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .queue-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .queue-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .queue-item:last-child {
+            border-bottom: none;
+        }
+        
+        .video-name {
+            font-weight: 500;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-ready {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-uploaded {
+            background: #e9d5ff;
+            color: #6b21a8;
+        }
+        
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .channel-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .channel-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .channel-stats {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .channel-stat {
+            text-align: center;
+        }
+        
+        .channel-stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .channel-stat-label {
+            font-size: 0.75rem;
+            color: #999;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+        .admin { margin-top: 20px; }
+        .admin h3 { margin-bottom: 10px; }
+        .admin-controls { display: flex; gap: 10px; margin-bottom: 10px; }
+        .admin table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .admin th, .admin td { padding: 8px; border-bottom: 1px solid #eee; }
+        .admin th { text-align: left; background: #f9fafb; }
+        .btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .select, .input { padding: 6px 8px; border: 1px solid #e5e7eb; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 UGC Video Manager Dashboard</h1>
+        
+        <div class="dashboard">
+            <!-- Statistics Card -->
+            <div class="card">
+                <h2>
+                    <span class="icon">📊</span>
+                    통계
+                </h2>
+                <div id="stats">
+                    <div class="loading">데이터 로딩 중...</div>
+                </div>
+            </div>
+            
+            <!-- Queue Status Card -->
+            <div class="card">
+                <h2>
+                    <span class="icon">📋</span>
+                    업로드 큐
+                </h2>
+                <div id="queue">
+                    <div class="loading">데이터 로딩 중...</div>
+                </div>
+            </div>
+            
+            <!-- Channels Card -->
+            <div class="card">
+                <h2>
+                    <span class="icon">📺</span>
+                    채널 현황
+                </h2>
+                <div id="channels">
+                    <div class="loading">데이터 로딩 중...</div>
+                </div>
+            </div>
+            
+            <!-- Recent Videos Card -->
+            <div class="card">
+                <h2>
+                    <span class="icon">🎬</span>
+                    최근 처리된 영상
+                </h2>
+                <div id="recent" class="queue-list">
+                    <div class="loading">데이터 로딩 중...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="refresh-btn" onclick="refreshData()">🔄 새로고침</button>
+    
+    <script>
+        const API_URL = 'http://localhost:8000';
+        
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                return null;
+            }
+        }
+        
+        async function updateStats() {
+            const stats = await fetchData('/stats');
+            const statsDiv = document.getElementById('stats');
+            
+            if (!stats) {
+                statsDiv.innerHTML = '<div class="error">통계를 불러올 수 없습니다</div>';
+                return;
+            }
+            
+            statsDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <div class="stat-value">${stats.total_videos || 0}</div>
+                        <div class="stat-label">전체 영상</div>
+                    </div>
+                    <div>
+                        <div class="stat-value">${stats.today_uploads || 0}</div>
+                        <div class="stat-label">오늘 업로드</div>
+                    </div>
+                    <div>
+                        <div class="stat-value">${stats.pending_count || 0}</div>
+                        <div class="stat-label">대기 중</div>
+                    </div>
+                    <div>
+                        <div class="stat-value">${stats.processing_count || 0}</div>
+                        <div class="stat-label">처리 중</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function updateQueue() {
+            const queue = await fetchData('/queue/status');
+            const queueDiv = document.getElementById('queue');
+            
+            if (!queue || !queue.items) {
+                queueDiv.innerHTML = '<div class="error">큐 정보를 불러올 수 없습니다</div>';
+                return;
+            }
+            
+            if (queue.items.length === 0) {
+                queueDiv.innerHTML = '<div class="loading">대기 중인 영상이 없습니다</div>';
+                return;
+            }
+            
+            const queueHtml = queue.items.slice(0, 5).map(item => `
+                <div class="queue-item">
+                    <div>
+                        <div class="video-name">${item.video_file_name || 'Unknown'}</div>
+                        <small style="color: #999;">${item.channel_name || 'No channel'}</small>
+                    </div>
+                    <span class="status-badge status-${item.status}">${item.status}</span>
+                </div>
+            `).join('');
+            
+            queueDiv.innerHTML = `<div class="queue-list">${queueHtml}</div>`;
+        }
+        
+        async function updateChannels() {
+            const channels = await fetchData('/channels');
+            const channelsDiv = document.getElementById('channels');
+            
+            if (!channels || !channels.channels) {
+                channelsDiv.innerHTML = '<div class="error">채널 정보를 불러올 수 없습니다</div>';
+                return;
+            }
+            
+            if (channels.channels.length === 0) {
+                channelsDiv.innerHTML = '<div class="loading">등록된 채널이 없습니다</div>';
+                return;
+            }
+            
+            const channelsHtml = channels.channels.map(channel => `
+                <div class="channel-card">
+                    <div class="channel-name">${channel.channel_name}</div>
+                    <div class="channel-stats">
+                        <div class="channel-stat">
+                            <div class="channel-stat-value">${channel.today_uploads || 0}</div>
+                            <div class="channel-stat-label">오늘</div>
+                        </div>
+                        <div class="channel-stat">
+                            <div class="channel-stat-value">${channel.remaining_uploads || 0}</div>
+                            <div class="channel-stat-label">남음</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            channelsDiv.innerHTML = channelsHtml;
+        }
+        
+        async function updateRecent() {
+            const history = await fetchData('/history/recent?limit=5');
+            const recentDiv = document.getElementById('recent');
+            
+            if (!history || !history.items) {
+                recentDiv.innerHTML = '<div class="loading">최근 처리 내역이 없습니다</div>';
+                return;
+            }
+            
+            if (history.items.length === 0) {
+                recentDiv.innerHTML = '<div class="loading">아직 처리된 영상이 없습니다</div>';
+                return;
+            }
+            
+            const recentHtml = history.items.map(item => `
+                <div class="queue-item">
+                    <div>
+                        <div class="video-name">${item.video_file_name}</div>
+                        <small style="color: #999;">${new Date(item.upload_time).toLocaleDateString('ko-KR')}</small>
+                    </div>
+                    <span class="status-badge status-uploaded">완료</span>
+                </div>
+            `).join('');
+            
+            recentDiv.innerHTML = recentHtml;
+        }
+        
+        async function refreshData() {
+            await Promise.all([
+                updateStats(),
+                updateQueue(),
+                updateChannels(),
+                updateRecent()
+            ]);
+        }
+        
+        // Initial load
+        refreshData();
+        
+        // Auto refresh every 10 seconds
+        setInterval(refreshData, 10000);
+
+        // Simple admin panel injected below main dashboard
+        (function mountAdmin(){
+            const container = document.querySelector('.container');
+            const card = document.createElement('div');
+            card.className = 'card admin';
+            card.innerHTML = `
+              <h2><span class="icon">🛠️</span> 관리자 패널</h2>
+              <div class="admin-controls">
+                <button id="btn-refresh-channels" class="btn btn-secondary">채널 새로고침</button>
+                <button id="btn-refresh-queue" class="btn btn-secondary">큐 새로고침</button>
+                <input id="inp-csv-path" class="input" placeholder="CSV 파일 경로" style="flex:1"/>
+                <button id="btn-preview-import" class="btn btn-secondary">미리보기</button>
+                <button id="btn-do-import" class="btn btn-primary">가져오기</button>
+              </div>
+              <div id="import-result" class="error" style="display:none;"></div>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div>
+                  <h3>채널 관리</h3>
+                  <div style="overflow:auto; max-height:300px;">
+                    <table id="tbl-channels">
+                      <thead>
+                        <tr>
+                          <th>이름</th><th>타입</th><th>카테고리</th><th>활성</th><th>업로드/일</th><th>저장</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div>
+                  <h3>큐 관리</h3>
+                  <div style="overflow:auto; max-height:300px;">
+                    <table id="tbl-queue">
+                      <thead>
+                        <tr>
+                          <th>파일명</th><th>상태</th><th>채널</th><th>할당</th><th>인포크링크</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            `;
+            container.appendChild(card);
+
+            document.getElementById('btn-refresh-channels').addEventListener('click', loadAdminChannels);
+            document.getElementById('btn-refresh-queue').addEventListener('click', loadAdminQueue);
+            document.getElementById('btn-preview-import').addEventListener('click', async () => {
+              const path = document.getElementById('inp-csv-path').value.trim();
+              if(!path) return;
+              const res = await fetch(`${API_URL}/api/admin/import-channels`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({csv_path: path, preview: true})});
+              const data = await res.json();
+              const box = document.getElementById('import-result');
+              box.style.display = 'block';
+              box.textContent = res.ok ? `미리보기 ${data.total_rows}건` : `오류: ${data.detail||res.status}`;
+            });
+            document.getElementById('btn-do-import').addEventListener('click', async () => {
+              const path = document.getElementById('inp-csv-path').value.trim();
+              if(!path) return;
+              const res = await fetch(`${API_URL}/api/admin/import-channels`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({csv_path: path, preview: false, update_if_exists: true})});
+              const data = await res.json();
+              const box = document.getElementById('import-result');
+              box.style.display = 'block';
+              if(res.ok){
+                box.style.background = '#d1fae5'; box.style.color = '#065f46';
+                box.textContent = `가져오기 완료: 추가 ${data.imported}건, 수정 ${data.updated}건, 오류 ${data.errors.length}건`;
+                loadAdminChannels();
+              } else {
+                box.style.background = '#fee2e2'; box.style.color = '#991b1b';
+                box.textContent = `오류: ${data.detail||res.status}`;
+              }
+            });
+
+            async function loadAdminChannels(){
+              const data = await fetchData('/api/admin/channels');
+              const tbody = document.querySelector('#tbl-channels tbody');
+              if(!data){ tbody.innerHTML = '<tr><td colspan="6">불러오기 오류</td></tr>'; return; }
+              tbody.innerHTML = data.map(ch => `
+                <tr data-id="${ch.id}">
+                  <td>${ch.channel_name}</td>
+                  <td>
+                    <select class="select sel-type">
+                      <option value="main" ${ch.channel_type==='main'?'selected':''}>main</option>
+                      <option value="sub" ${ch.channel_type==='sub'?'selected':''}>sub</option>
+                    </select>
+                  </td>
+                  <td><input class="input inp-cat" value="${ch.category||''}"/></td>
+                  <td><input type="checkbox" class="chk-active" ${ch.is_active?'checked':''}/></td>
+                  <td><input class="input inp-max" type="number" min="1" max="20" value="${ch.max_daily_uploads||3}" style="width:64px"/></td>
+                  <td><button class="btn btn-primary btn-save">저장</button></td>
+                </tr>
+              `).join('');
+
+              tbody.querySelectorAll('.btn-save').forEach(btn => btn.addEventListener('click', async (e) => {
+                const tr = e.target.closest('tr');
+                const id = tr.getAttribute('data-id');
+                const payload = {
+                  channel_type: tr.querySelector('.sel-type').value,
+                  category: tr.querySelector('.inp-cat').value,
+                  is_active: tr.querySelector('.chk-active').checked,
+                  max_daily_uploads: parseInt(tr.querySelector('.inp-max').value, 10)
+                };
+                await fetch(`${API_URL}/api/admin/channels/${id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+              }));
+            }
+
+            async function loadAdminQueue(){
+              const q = await fetchData('/api/queue?limit=50');
+              const chs = await fetchData('/api/admin/channels');
+              const tbody = document.querySelector('#tbl-queue tbody');
+              if(!q){ tbody.innerHTML = '<tr><td colspan="5">불러오기 오류</td></tr>'; return; }
+              const channels = chs||[];
+              tbody.innerHTML = q.map(item => `
+                <tr data-id="${item.id}">
+                  <td>${item.video_file_name}</td>
+                  <td>${item.status}</td>
+                  <td>${item.channel_id||''}</td>
+                  <td>
+                    <select class="select sel-assign">
+                      ${(channels.map(c => `<option value="${c.id}" ${c.id===item.channel_id?'selected':''}>${c.channel_name}</option>`).join(''))}
+                    </select>
+                    <button class="btn btn-primary btn-assign">할당</button>
+                  </td>
+                  <td>
+                    <input class="input inp-coupang" placeholder="쿠팡 URL" style="width:180px"/>
+                    <button class="btn btn-secondary btn-link">생성</button>
+                  </td>
+                </tr>
+              `).join('');
+
+              tbody.querySelectorAll('.btn-assign').forEach(btn => btn.addEventListener('click', async (e) => {
+                const tr = e.target.closest('tr'); const id = tr.getAttribute('data-id');
+                const channel_id = tr.querySelector('.sel-assign').value;
+                await fetch(`${API_URL}/api/admin/queue/${id}/assign`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({channel_id})});
+              }));
+              tbody.querySelectorAll('.btn-link').forEach(btn => btn.addEventListener('click', async (e) => {
+                const tr = e.target.closest('tr'); const id = tr.getAttribute('data-id');
+                const url = tr.querySelector('.inp-coupang').value; const channel_id = tr.querySelector('.sel-assign').value;
+                if(!url) return;
+                await fetch(`${API_URL}/api/admin/queue/${id}/infocrlink`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({coupang_url: url, channel_id})});
+              }));
+            }
+
+            // initial load admin panes
+            loadAdminChannels();
+            loadAdminQueue();
+        })();
+    </script>
+</body>
+</html>

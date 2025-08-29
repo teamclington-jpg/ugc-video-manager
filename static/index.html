@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGC Video Manager - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: #f0f0f0;
+            color: #666;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card .subtitle {
+            color: #999;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-ready { background: #d4edda; color: #155724; }
+        .status-uploaded { background: #d1ecf1; color: #0c5460; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .channel-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .channel-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .channel-info {
+            flex: 1;
+        }
+
+        .channel-info h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .channel-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .channel-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .channel-stat {
+            text-align: center;
+        }
+
+        .channel-stat .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .channel-stat .label {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .channel-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e0e0e0;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -35px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-item h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .timeline-item p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .timeline-item time {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .channel-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 UGC Video Manager</h1>
+            <p>영상 자동 처리 및 업로드 큐 관리 시스템</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">📊 대시보드</button>
+            <button class="tab" onclick="switchTab('channels')">📺 채널 관리</button>
+            <button class="tab" onclick="switchTab('queue')">📋 업로드 큐</button>
+            <button class="tab" onclick="switchTab('history')">📜 업로드 기록</button>
+            <button class="tab" onclick="switchTab('infolink')">🔗 인포링크</button>
+            <button class="tab" onclick="switchTab('settings')">⚙️ 설정</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h3>활성 채널</h3>
+                    <div class="value" id="stat-channels">0</div>
+                    <div class="subtitle">유튜브 채널</div>
+                </div>
+                <div class="stat-card">
+                    <h3>대기중 영상</h3>
+                    <div class="value" id="stat-pending">0</div>
+                    <div class="subtitle">업로드 대기</div>
+                </div>
+                <div class="stat-card">
+                    <h3>처리중</h3>
+                    <div class="value" id="stat-processing">0</div>
+                    <div class="subtitle">분석 진행중</div>
+                </div>
+                <div class="stat-card">
+                    <h3>오늘 업로드</h3>
+                    <div class="value" id="stat-today">0</div>
+                    <div class="subtitle">완료된 업로드</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📈 채널별 업로드 현황</h2>
+                <div id="channel-upload-chart">
+                    <div class="empty-state">
+                        <h3>데이터를 불러오는 중...</h3>
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🕐 최근 활동</h2>
+                <div class="timeline" id="recent-activity">
+                    <div class="empty-state">
+                        <h3>최근 활동이 없습니다</h3>
+                        <p>영상이 처리되면 여기에 표시됩니다</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channels Tab -->
+        <div id="channels" class="tab-content">
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>📺 채널 목록</h2>
+                    <button class="btn btn-primary" onclick="openChannelModal()">
+                        <span>➕</span> 새 채널 추가
+                    </button>
+                </div>
+                <div id="channels-list">
+                    <div class="empty-state">
+                        <h3>채널을 불러오는 중...</h3>
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue Tab -->
+        <div id="queue" class="tab-content">
+            <div class="section">
+                <h2>📋 업로드 큐</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-secondary" onclick="loadQueue('all')">전체</button>
+                    <button class="btn btn-warning" onclick="loadQueue('pending')">대기중</button>
+                    <button class="btn btn-primary" onclick="loadQueue('processing')">처리중</button>
+                    <button class="btn btn-success" onclick="loadQueue('ready')">준비완료</button>
+                    <button class="btn btn-danger" onclick="loadQueue('failed')">실패</button>
+                </div>
+                <div id="queue-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>파일명</th>
+                                <th>채널</th>
+                                <th>상태</th>
+                                <th>우선순위</th>
+                                <th>생성시간</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queue-tbody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px;">
+                                    <div class="empty-state">
+                                        <h3>큐가 비어있습니다</h3>
+                                        <p>영상이 추가되면 여기에 표시됩니다</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div class="section">
+                <h2>📜 업로드 기록</h2>
+                <div id="history-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>파일명</th>
+                                <th>채널</th>
+                                <th>업로드 시간</th>
+                                <th>조회수</th>
+                                <th>좋아요</th>
+                                <th>댓글</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 40px;">
+                                    <div class="empty-state">
+                                        <h3>업로드 기록이 없습니다</h3>
+                                        <p>영상이 업로드되면 여기에 표시됩니다</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Infolink Tab -->
+        <div id="infolink" class="tab-content">
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>🔗 인포크링크 관리</h2>
+                    <button class="btn btn-primary" onclick="openInfolinkModal()">
+                        <span>➕</span> 새 링크 추가
+                    </button>
+                </div>
+                <div id="infolink-list">
+                    <div class="empty-state">
+                        <h3>인포링크를 불러오는 중...</h3>
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="section">
+                <h2>⚙️ 시스템 설정</h2>
+                <div class="form-group">
+                    <label>감시 폴더 경로</label>
+                    <input type="text" id="watch-folder" value="/Users/thecity17/Desktop/teamclingotondrive/상품쇼츠DB" readonly>
+                </div>
+                <div class="form-group">
+                    <label>최대 일일 업로드 수 (기본값)</label>
+                    <input type="number" id="max-daily-uploads" value="3">
+                </div>
+                <div class="form-group">
+                    <label>최소 파일 크기 (MB)</label>
+                    <input type="number" id="min-file-size" value="1">
+                </div>
+                <div class="form-group">
+                    <label>최대 파일 크기 (MB)</label>
+                    <input type="number" id="max-file-size" value="150">
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">설정 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel Modal -->
+    <div id="channel-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="channel-modal-title">새 채널 추가</h2>
+            </div>
+            <form id="channel-form">
+                <input type="hidden" id="channel-id">
+                <div class="form-group">
+                    <label>채널명 *</label>
+                    <input type="text" id="channel-name" required>
+                </div>
+                <div class="form-group">
+                    <label>채널 URL *</label>
+                    <input type="url" id="channel-url" required placeholder="https://youtube.com/@channel">
+                </div>
+                <div class="form-group">
+                    <label>채널 유형 *</label>
+                    <select id="channel-type" required>
+                        <option value="main">메인 채널</option>
+                        <option value="sub">서브 채널</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>카테고리 *</label>
+                    <select id="channel-category" required>
+                        <option value="pet">반려동물</option>
+                        <option value="lifestyle">라이프스타일</option>
+                        <option value="home">홈/주방</option>
+                        <option value="tech">테크</option>
+                        <option value="beauty">뷰티</option>
+                        <option value="food">푸드</option>
+                        <option value="other">기타</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>설명</label>
+                    <textarea id="channel-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>계정 ID *</label>
+                    <input type="email" id="channel-account-id" required>
+                </div>
+                <div class="form-group">
+                    <label>계정 비밀번호 *</label>
+                    <input type="password" id="channel-account-password" required>
+                </div>
+                <div class="form-group">
+                    <label>일일 최대 업로드</label>
+                    <input type="number" id="channel-max-uploads" value="3" min="1" max="10">
+                </div>
+                <div class="form-group">
+                    <label>인포크링크 URL</label>
+                    <input type="url" id="channel-infolink" placeholder="https://example.com/infolink">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeChannelModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Infolink Modal -->
+    <div id="infolink-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>새 인포링크 추가</h2>
+            </div>
+            <form id="infolink-form">
+                <input type="hidden" id="infolink-id">
+                <div class="form-group">
+                    <label>채널 선택 *</label>
+                    <select id="infolink-channel" required>
+                        <option value="">채널을 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>인포링크 URL *</label>
+                    <input type="url" id="infolink-url" required>
+                </div>
+                <div class="form-group">
+                    <label>링크 유형</label>
+                    <select id="infolink-type">
+                        <option value="coupang">쿠팡 파트너스</option>
+                        <option value="naver">네이버 쇼핑</option>
+                        <option value="amazon">아마존 어소시에이트</option>
+                        <option value="other">기타</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>수수료율 (%)</label>
+                    <input type="number" id="infolink-commission" step="0.1" min="0" max="100">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeInfolinkModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentTab = 'dashboard';
+
+        // Tab switching
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            // Load data for the selected tab
+            switch(tabName) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'channels':
+                    loadChannels();
+                    break;
+                case 'queue':
+                    loadQueue('all');
+                    break;
+                case 'history':
+                    loadHistory();
+                    break;
+                case 'infolink':
+                    loadInfolinks();
+                    break;
+            }
+        }
+
+        // Dashboard
+        async function loadDashboard() {
+            try {
+                // Load statistics
+                const statsRes = await fetch(`${API_BASE}/stats`);
+                const stats = await statsRes.json();
+                
+                document.getElementById('stat-channels').textContent = stats.total_channels || '0';
+                document.getElementById('stat-pending').textContent = stats.pending_videos || '0';
+                document.getElementById('stat-processing').textContent = stats.processing_videos || '0';
+                document.getElementById('stat-today').textContent = stats.today_uploads || '0';
+                
+                // Load channel upload chart
+                const channelsRes = await fetch(`${API_BASE}/channels`);
+                const channels = await channelsRes.json();
+                
+                if (channels.length > 0) {
+                    const chartHtml = channels.map(ch => `
+                        <div class="channel-card">
+                            <div class="channel-info">
+                                <h3>${ch.channel_name}</h3>
+                                <p>${ch.category} • ${ch.channel_type}</p>
+                            </div>
+                            <div class="channel-stats">
+                                <div class="channel-stat">
+                                    <div class="value">${ch.today_uploads || 0}</div>
+                                    <div class="label">오늘</div>
+                                </div>
+                                <div class="channel-stat">
+                                    <div class="value">${ch.max_daily_uploads - (ch.today_uploads || 0)}</div>
+                                    <div class="label">남음</div>
+                                </div>
+                            </div>
+                            <div class="progress-bar" style="width: 200px;">
+                                <div class="progress-fill" style="width: ${(ch.today_uploads / ch.max_daily_uploads) * 100}%"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('channel-upload-chart').innerHTML = chartHtml;
+                }
+                
+                // Load recent activity
+                const historyRes = await fetch(`${API_BASE}/history/recent?limit=5`);
+                const history = await historyRes.json();
+                
+                if (history.length > 0) {
+                    const activityHtml = history.map(item => `
+                        <div class="timeline-item">
+                            <h4>${item.video_file_name}</h4>
+                            <p>채널: ${item.channel_name || 'Unknown'}</p>
+                            <time>${new Date(item.upload_time).toLocaleString('ko-KR')}</time>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('recent-activity').innerHTML = activityHtml;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        // Channels
+        async function loadChannels() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/channels`);
+                const channels = await res.json();
+                
+                if (channels.length > 0) {
+                    const channelsHtml = channels.map(ch => `
+                        <div class="channel-card">
+                            <div class="channel-info">
+                                <h3>${ch.channel_name}</h3>
+                                <p>${ch.category} • ${ch.channel_type} • ${ch.channel_url}</p>
+                                <p style="color: #999; font-size: 0.85rem;">
+                                    계정: ${ch.account_id} • 
+                                    일일 한도: ${ch.max_daily_uploads}개 • 
+                                    상태: ${ch.is_active ? '✅ 활성' : '❌ 비활성'}
+                                </p>
+                            </div>
+                            <div class="channel-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="editChannel('${ch.id}')">수정</button>
+                                <button class="btn btn-sm ${ch.is_active ? 'btn-warning' : 'btn-success'}" 
+                                        onclick="toggleChannel('${ch.id}', ${!ch.is_active})">
+                                    ${ch.is_active ? '비활성화' : '활성화'}
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteChannel('${ch.id}')">삭제</button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('channels-list').innerHTML = channelsHtml;
+                } else {
+                    document.getElementById('channels-list').innerHTML = `
+                        <div class="empty-state">
+                            <h3>등록된 채널이 없습니다</h3>
+                            <p>새 채널을 추가해주세요</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading channels:', error);
+                document.getElementById('channels-list').innerHTML = `
+                    <div class="alert alert-danger">
+                        채널 목록을 불러오는 중 오류가 발생했습니다.
+                    </div>
+                `;
+            }
+        }
+
+        // Queue
+        async function loadQueue(status) {
+            try {
+                let url = `${API_BASE}/queue/status`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                // Get queue items
+                const queueRes = await fetch(`${API_BASE}/api/queue?limit=50`);
+                const queueItems = await queueRes.json();
+                
+                if (queueItems.length > 0) {
+                    const filteredItems = status === 'all' ? queueItems : queueItems.filter(item => item.status === status);
+                    
+                    const queueHtml = filteredItems.map(item => `
+                        <tr>
+                            <td>${item.video_file_name}</td>
+                            <td>${item.channel_name || 'Unassigned'}</td>
+                            <td><span class="status-badge status-${item.status}">${item.status}</span></td>
+                            <td>${item.priority}</td>
+                            <td>${new Date(item.created_at).toLocaleString('ko-KR')}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="processQueue('${item.id}')">처리</button>
+                                <button class="btn btn-sm btn-danger" onclick="removeFromQueue('${item.id}')">삭제</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                    document.getElementById('queue-tbody').innerHTML = queueHtml || `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <div class="empty-state">
+                                    <h3>큐가 비어있습니다</h3>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    document.getElementById('queue-tbody').innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <div class="empty-state">
+                                    <h3>큐가 비어있습니다</h3>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading queue:', error);
+            }
+        }
+
+        // History
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/history/recent?limit=50`);
+                const history = await res.json();
+                
+                if (history.length > 0) {
+                    const historyHtml = history.map(item => `
+                        <tr>
+                            <td>${item.video_file_name}</td>
+                            <td>${item.channel_name || 'Unknown'}</td>
+                            <td>${new Date(item.upload_time).toLocaleString('ko-KR')}</td>
+                            <td>${item.views_count || 0}</td>
+                            <td>${item.likes_count || 0}</td>
+                            <td>${item.comments_count || 0}</td>
+                            <td>
+                                ${item.youtube_video_url ? 
+                                    `<a href="${item.youtube_video_url}" target="_blank" class="btn btn-sm btn-primary">보기</a>` :
+                                    '-'
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                    document.getElementById('history-tbody').innerHTML = historyHtml;
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Infolinks
+        async function loadInfolinks() {
+            try {
+                // For now, we'll show a placeholder
+                document.getElementById('infolink-list').innerHTML = `
+                    <div class="empty-state">
+                        <h3>인포링크 기능 준비중</h3>
+                        <p>곧 사용 가능합니다</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading infolinks:', error);
+            }
+        }
+
+        // Channel Modal
+        function openChannelModal() {
+            document.getElementById('channel-modal-title').textContent = '새 채널 추가';
+            document.getElementById('channel-form').reset();
+            document.getElementById('channel-id').value = '';
+            document.getElementById('channel-modal').classList.add('active');
+        }
+
+        function closeChannelModal() {
+            document.getElementById('channel-modal').classList.remove('active');
+        }
+
+        async function editChannel(id) {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/channels`);
+                const channels = await res.json();
+                const channel = channels.find(ch => ch.id === id);
+                
+                if (channel) {
+                    document.getElementById('channel-modal-title').textContent = '채널 수정';
+                    document.getElementById('channel-id').value = channel.id;
+                    document.getElementById('channel-name').value = channel.channel_name;
+                    document.getElementById('channel-url').value = channel.channel_url;
+                    document.getElementById('channel-type').value = channel.channel_type;
+                    document.getElementById('channel-category').value = channel.category;
+                    document.getElementById('channel-description').value = channel.description || '';
+                    document.getElementById('channel-account-id').value = channel.account_id;
+                    document.getElementById('channel-account-password').value = channel.account_password;
+                    document.getElementById('channel-max-uploads').value = channel.max_daily_uploads;
+                    document.getElementById('channel-infolink').value = channel.infocrlink_url || '';
+                    document.getElementById('channel-modal').classList.add('active');
+                }
+            } catch (error) {
+                console.error('Error editing channel:', error);
+            }
+        }
+
+        async function toggleChannel(id, activate) {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/channels/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_active: activate })
+                });
+                
+                if (res.ok) {
+                    loadChannels();
+                }
+            } catch (error) {
+                console.error('Error toggling channel:', error);
+            }
+        }
+
+        async function deleteChannel(id) {
+            if (confirm('정말로 이 채널을 삭제하시겠습니까?')) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/admin/channels/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (res.ok) {
+                        loadChannels();
+                    }
+                } catch (error) {
+                    console.error('Error deleting channel:', error);
+                }
+            }
+        }
+
+        // Form submission
+        document.getElementById('channel-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('channel-id').value;
+            const data = {
+                channel_name: document.getElementById('channel-name').value,
+                channel_url: document.getElementById('channel-url').value,
+                channel_type: document.getElementById('channel-type').value,
+                category: document.getElementById('channel-category').value,
+                description: document.getElementById('channel-description').value,
+                account_id: document.getElementById('channel-account-id').value,
+                account_password: document.getElementById('channel-account-password').value,
+                max_daily_uploads: parseInt(document.getElementById('channel-max-uploads').value),
+                infocrlink_url: document.getElementById('channel-infolink').value || null,
+                is_active: true
+            };
+            
+            try {
+                const url = id ? `${API_BASE}/api/admin/channels/${id}` : `${API_BASE}/api/admin/channels`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (res.ok) {
+                    closeChannelModal();
+                    loadChannels();
+                } else {
+                    alert('채널 저장 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Error saving channel:', error);
+                alert('채널 저장 중 오류가 발생했습니다.');
+            }
+        });
+
+        // Infolink Modal
+        function openInfolinkModal() {
+            document.getElementById('infolink-form').reset();
+            document.getElementById('infolink-modal').classList.add('active');
+            
+            // Load channels for dropdown
+            loadChannelsForDropdown();
+        }
+
+        function closeInfolinkModal() {
+            document.getElementById('infolink-modal').classList.remove('active');
+        }
+
+        async function loadChannelsForDropdown() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/channels`);
+                const channels = await res.json();
+                
+                const select = document.getElementById('infolink-channel');
+                select.innerHTML = '<option value="">채널을 선택하세요</option>' + 
+                    channels.map(ch => `<option value="${ch.id}">${ch.channel_name}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading channels for dropdown:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            
+            // Auto-refresh dashboard every 30 seconds
+            setInterval(() => {
+                if (currentTab === 'dashboard') {
+                    loadDashboard();
+                }
+            }, 30000);
+        });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
